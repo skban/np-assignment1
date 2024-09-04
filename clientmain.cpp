@@ -14,16 +14,18 @@
 
 // Enable if you want debugging to be printed, see examble below.
 // Alternative, pass CFLAGS=-DDEBUG to make, make CFLAGS=-DDEBUG
-
 #define DEBUG
+
+
 // INCLUDED MAX RECV  BUF SIZE
 
 #define MAXDATASIZE 1401 //MAX NUM OF BYTES WE CAN GET AT ONCE
+
 // Included to get the support library
 
 #include <calcLib.h>
-// get sockaddr, IPv4 or IPv6:
 
+// get sockaddr, IPv4 or IPv6:
 
 
 void *get_in_addr(struct sockaddr *sa)
@@ -39,7 +41,6 @@ void *get_in_addr(struct sockaddr *sa)
 }
 
 
-
 int main(int argc, char *argv[]){
 
   /*
@@ -51,6 +52,7 @@ int main(int argc, char *argv[]){
      fprintf(stderr,"usage: client hostname:port\n");
      exit(1);
     }
+    
   char delim[]=":";
   char calcDelim[] = " ";
   char *Desthost=strtok(argv[1],delim);
@@ -64,23 +66,28 @@ int main(int argc, char *argv[]){
 
   /* Initialize the library, this is needed for this library. */
   //initCalcLib();
+  
   double f1,f2,fresult;
   int i1,i2,iresult;
+  
   // *Desthost now points to a sting holding whatever came before the delimiter, ':'.
   // *Dstport points to whatever string came after the delimiter. 
 
   /* Do magic */
   //int  port=atoi(Destport);
+  
   #ifdef DEBUG 
   printf("Host %s, and port %s.\n",Desthost,Destport);
   #endif
+    
+    
   memset(&hints, 0, sizeof hints);
   hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
 
 
  if ((rv = getaddrinfo(Desthost, Destport, &hints, &servinfo)) != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+   fprintf(stderr, "ERROR\n");
         return 1;
     }    
  
@@ -96,20 +103,23 @@ int main(int argc, char *argv[]){
 
         if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
             close(sockfd);
-            perror("client: connect");
+            /*perror("client: connect");*/
             continue;
         }
-	printf("Connection successfull.\n");
+        
         break;
     }
     /* Why are we here??? p == NULL, Looped no match (socket &| connect).. 
        Success?? */
+       
     if (p == NULL) {
-        fprintf(stderr, "client: failed to socket||connect\n");
-	/* Clear servinfo */
-	freeaddrinfo(servinfo); // all done with this structure
+        /*fprintf(stderr, "client: failed to socket||connect\n");
+        /* Clear servinfo */
+        freeaddrinfo(servinfo); // all done with this structure
+        fprintf(stderr, "ERROR\n");
         return 2;
     }
+    
     printf("client: connected to %s:%s\n", s,Destport);
     freeaddrinfo(servinfo); // all done with this structure
   
@@ -118,12 +128,14 @@ int main(int argc, char *argv[]){
       numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0);
       if(numbytes == -1 ){
         perror("recv");
+        close(sockfd);
         exit(1);
       }
       if (numbytes == 0) {
 	    printf("Server closed.\n");
 	    break;
       }
+      
       printf("\n\nclient (%d bytes) : receive complete : %s\n",numbytes, buf);
       bzero(buf,MAXDATASIZE);
       //Server Message
@@ -451,12 +463,15 @@ int main(int argc, char *argv[]){
           printf("client (%d bytes) : receive complete : %s\n",numbytes,buf);
 
           bzero(buf,MAXDATASIZE);
+          
+          // Terminate after handling a command
           break;
           }
 
     }
 
   }
+
     close(sockfd);
     return 0;
 }
