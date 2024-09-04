@@ -16,7 +16,6 @@
 // Alternative, pass CFLAGS=-DDEBUG to make, make CFLAGS=-DDEBUG
 #define DEBUG
 
-
 // INCLUDED MAX RECV  BUF SIZE
 
 #define MAXDATASIZE 1401 //MAX NUM OF BYTES WE CAN GET AT ONCE
@@ -93,8 +92,29 @@ int main(int argc, char *argv[]){
  
  //Desthost
  
- // loop through all the results and connect to the first we can
- for(p = servinfo; p != NULL; p = p->ai_next) {
+ // loop through all the results and connect to the first we can & print results for analysis.
+
+  for(p = servinfo; p != NULL; p = p->ai_next) {
+    //printf("Address family(ai_family): %d\n", p->ai_family);
+    //printf("Socket type(ai_family): %d\n", p->ai_socktype);
+    //printf("Protocol(ai_protocol): %d\n", p->ai_protocol);
+    //printf("Canonical name(ai_canonname): %s\n", p->ai_canonname);
+    //printf("Socket address: %s\n", inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr), s, sizeof s));
+    //printf("Connected to %s:%s\n", Desthost, Destport);
+    
+    /*if (p->ai_family == AF_INET) { // IPv4
+        struct sockaddr_in *s = (struct sockaddr_in *)p->ai_addr;
+        printf("Port: %d\n", ntohs(s->sin_port));
+    } else if (p->ai_family == AF_INET6) { // IPv6
+        struct sockaddr_in6 *s = (struct sockaddr_in6 *)p->ai_addr;
+        printf("Port: %d\n", ntohs(s->sin6_port));
+    }*/
+    
+    // The message format is expected to be:
+// "Connected to <Destination IP>:<Destination Port> local <Local IP>:<Local Port>"
+    //printf("Connected to %s:%s local %s:%d\n", Desthost, Destport, inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr), s, sizeof s), ntohs(((struct sockaddr_in *)p->ai_addr)->sin_port));
+    
+    
 	 if ((sockfd = socket(p->ai_family, p->ai_socktype,
                 p->ai_protocol)) == -1) {
             perror("client: socket");
@@ -120,7 +140,12 @@ int main(int argc, char *argv[]){
         return 2;
     }
     
-    printf("client: connected to %s:%s\n", s,Destport);
+    //printf("Connected to %s:%s\n", Desthost,Destport);
+    printf("Connected to %s:%s local %s:%d\n", Desthost, Destport, inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr), s, sizeof s), ntohs(((struct sockaddr_in *)p->ai_addr)->sin_port));
+    
+    // Analyze why the destination and local ports are the same in the output message. Example output: "Connected to 13.53.76.30:5000 local 13.53.76.30:5000". The printf statement used is: printf("Connected to %s:%s local %s:%d\n", Desthost, Destport,  inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr), s, sizeof s),  ntohs(((struct sockaddr_in *)p->ai_addr)->sin_port)); The goal is to verify whether the destination and local ports should be different, and if not, investigate why they appear the same in the output. This may involve checking the correctness of the address and port assignments in the code. printf("Connected to %s:%s local %s:%d\n", Desthost, Destport, inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr), s, sizeof s), ntohs(((struct sockaddr_in *)p->ai_addr)->sin_port));
+    //printf("Connected to %s:%s local %s:%d\n", Desthost, Destport, inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr), s, sizeof s), ntohs(((struct sockaddr_in *)p->ai_addr)->sin_port));
+
     freeaddrinfo(servinfo); // all done with this structure
   
     while(1){
@@ -475,7 +500,6 @@ int main(int argc, char *argv[]){
     close(sockfd);
     return 0;
 }
-
 
 
 
